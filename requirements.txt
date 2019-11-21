@@ -1,0 +1,4 @@
+asciimatics
+requests
+BeautifulSoup4
+fake-useragent

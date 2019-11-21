@@ -9,6 +9,11 @@ pip3 install BeautifulSoup4
 pip3 install fake-useragent
 ```
 
+或者直接运行以下命令安装：
+```
+pip3 install -r
+```
+
 运行方法，进入NBash.py所在目录，输入：
 ```
 python3 ./NBash.py
