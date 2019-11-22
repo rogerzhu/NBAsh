@@ -12,6 +12,7 @@ import fake_useragent
 base_url = 'https://nba.hupu.com/games'
 line_height = 5
 
+
 # Not sure how to use it efficiently
 def GetStatDicTemplate():
     dict_stat_template = {}
@@ -150,6 +151,29 @@ def GetDetailTable(content_table):
     return table_details
 
 
+def GetScoreInSection(live_content):
+    score_in_section_table = GetOneElementByClass(
+        live_content, 'table', 'itinerary_table')
+    score_in_section_away_table = GetOneElementByClass(
+        score_in_section_table, 'tr', 'away_score')
+    score_in_section_home_table = GetOneElementByClass(
+        score_in_section_table, 'tr', 'home_score')
+
+    away_score_list = ['0', '0', '0', '0']
+    home_score_list = ['0', '0', '0', '0']
+    away_index = 0
+    home_index = 0
+    for item in score_in_section_away_table.find_all('td')[1:-1]:
+        away_score_list[away_index] = item.get_text().strip()
+        away_index += 1
+
+    for item in score_in_section_home_table.find_all('td')[1:-1]:
+        home_score_list[home_index] = item.get_text().strip()
+        home_index += 1
+
+    return away_score_list, home_score_list
+
+
 def GetOneGameDetails(all_game_lists, str_index):
     table_details = {}
     index = ord(str_index) - ord('A')
@@ -173,19 +197,59 @@ def GetOneGameDetails(all_game_lists, str_index):
     table_details_away = GetDetailTable(score_live_content_core_table_away)
     table_details_home = GetDetailTable(score_live_content_core_table_home)
 
-    table_details['away'] = table_details_away
-    table_details['home'] = table_details_home
+    score_in_section_away, score_in_section_home = GetScoreInSection(
+        score_live_content)
+
+    table_details['away_player_details'] = table_details_away
+    table_details['home_player_details'] = table_details_home
+    table_details['away_section_scores'] = score_in_section_away
+    table_details['home_section_scores'] = score_in_section_home
 
     return table_details
 
 
+def DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row):
+    game_info_a = '{0}:{1}'.format(game.teamA.name, game.teamA.score)
+    screen.print_at(game_info_a, int(col_width_away_total / 2), start_row)
+
+    game_info_b = '{0}:{1}'.format(game.teamB.name, game.teamB.score)
+    screen.print_at(game_info_b, int(col_width_away_total * 3 / 2), start_row)
+
+    screen.print_at(game.time.strip(), col_width_away_total, start_row)
+
+    return
+
+
+def DrawScoreInSection(screen, away, home, col_width_away_total, start_row):
+    col_index = int(col_width_away_total / 2)
+    section_index = 1
+    screen.print_at('节次', col_index - 5, start_row + 2)
+    screen.print_at('比分', col_index - 5, start_row + 3)
+    for item in away:
+        screen.print_at(str(section_index), col_index, start_row + 2)
+        screen.print_at(item, col_index, start_row + 3)
+        col_index += 3
+        section_index += 1
+
+    col_index = int(col_width_away_total * 3 / 2)
+    section_index = 1
+    screen.print_at('节次', col_index - 5, start_row + 2)
+    screen.print_at('比分', col_index - 5, start_row + 3)
+    for item in home:
+        screen.print_at(str(section_index), col_index, start_row + 2)
+        screen.print_at(item, col_index, start_row + 3)
+        col_index += 3
+        section_index += 1
+
+    return
+
+
 def DrawOneGameDetailsFullMode(screen, game, details_table,
                                start_row, start_col=0):
-    row_index = start_row + 3
-    # col_count = len(details_table['away'][0])
+    row_index = start_row + 6
     col_width_away_total = 0
 
-    for item in details_table['away']:
+    for item in details_table['away_player_details']:
         col_index = 0
         col_width_away_total = 0
         for row_item in item:
@@ -208,8 +272,8 @@ def DrawOneGameDetailsFullMode(screen, game, details_table,
         row_index = row_index + 1
 
     col_width_away_total += 1
-    row_index = start_row + 3
-    for item in details_table['home']:
+    row_index = start_row + 6
+    for item in details_table['home_player_details']:
         col_index = 0
         for row_item in item:
             if col_index == 0:
@@ -231,23 +295,22 @@ def DrawOneGameDetailsFullMode(screen, game, details_table,
             col_index = col_index + 1
         row_index = row_index + 1
 
-    game_info_a = '{0}:{1}'.format(game.teamA.name, game.teamA.score)
-    screen.print_at(game_info_a, int(col_width_away_total / 2), start_row)
+    DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
 
-    game_info_b = '{0}:{1}'.format(game.teamB.name, game.teamB.score)
-    screen.print_at(game_info_b, int(col_width_away_total * 3 / 2), start_row)
-
-    screen.print_at(game.time.strip(), col_width_away_total, start_row)
+    away_score_in_section = details_table['away_section_scores']
+    home_score_in_section = details_table['home_section_scores']
+    DrawScoreInSection(screen, away_score_in_section,
+                       home_score_in_section, col_width_away_total,
+                       start_row)
     return
 
 
 def DrawOneGameDetailsSimpleMode(screen, game, details_table,
                                  start_row, start_col=0):
-    row_index = start_row + 3
-    # col_count = len(details_table['away'][0])
+    row_index = start_row + 6
     col_width_away_total = 0
 
-    for item in details_table['away']:
+    for item in details_table['away_player_details']:
         col_index = 0
         col_width_away_total = 0
         for row_item in item:
@@ -264,8 +327,8 @@ def DrawOneGameDetailsSimpleMode(screen, game, details_table,
         row_index = row_index + 1
 
     col_width_away_total += 1
-    row_index = start_row + 3
-    for item in details_table['home']:
+    row_index = start_row + 6
+    for item in details_table['home_player_details']:
         col_index = 0
         for row_item in item:
             if col_index == 0:
@@ -283,13 +346,13 @@ def DrawOneGameDetailsSimpleMode(screen, game, details_table,
             col_index = col_index + 1
         row_index = row_index + 1
 
-    game_info_a = '{0}:{1}'.format(game.teamA.name, game.teamA.score)
-    screen.print_at(game_info_a, int(col_width_away_total / 2), start_row)
+    DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
+    away_score_in_section = details_table['away_section_scores']
+    home_score_in_section = details_table['home_section_scores']
+    DrawScoreInSection(screen, away_score_in_section,
+                       home_score_in_section, col_width_away_total,
+                       start_row)
 
-    game_info_b = '{0}:{1}'.format(game.teamB.name, game.teamB.score)
-    screen.print_at(game_info_b, int(col_width_away_total * 3 / 2), start_row)
-
-    screen.print_at(game.time.strip(), col_width_away_total, start_row)
     return
 
 
@@ -373,9 +436,9 @@ def GoLive(screen):
 
             screen.print_at(
                 instructions + choice, 0, (row + 1) * line_height + 3)
-            
+
             screen.print_at(
-                copy_right, 0 , screen.height - 1)
+                copy_right, 0, screen.height - 1)
 
             screen.refresh()
             if not all_games_finished:
@@ -384,13 +447,15 @@ def GoLive(screen):
                 time.sleep(1)
         else:
             if not one_game_finished:
-                one_game_details_table = GetOneGameDetails(all_game_lists, choice.upper())
+                one_game_details_table = GetOneGameDetails(
+                    all_game_lists, choice.upper())
 
             if len(one_game_details_table) != 0:
                 if '结束' in games[ord(choice) - ord('a')].time:
                     one_game_finished = True
                 DrawOneGameDetails(
-                    screen, games[ord(choice) - ord('a')], one_game_details_table, 0)
+                    screen, games[ord(choice) - ord('a')],
+                    one_game_details_table, 0)
             else:
                 screen.print_at('比赛未开始', 0, 0)
 
@@ -402,7 +467,7 @@ def GoLive(screen):
             screen.print_at('按q返回上层界面: ', 0, screen.height - 1)
             screen.refresh()
             if not one_game_finished:
-                time.sleep(3)
+                time.sleep(5)
             else:
                 time.sleep(1)
 
