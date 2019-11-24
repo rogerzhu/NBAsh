@@ -220,25 +220,14 @@ def DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row):
     return
 
 
-def DrawScoreInSection(screen, away, home, col_width_away_total, start_row):
-    col_index = int(col_width_away_total / 2)
+def DrawScoreInSection(screen, score_in_sections, start_col_index, start_row):
     section_index = 1
-    screen.print_at('节次', col_index - 5, start_row + 2)
-    screen.print_at('比分', col_index - 5, start_row + 3)
-    for item in away:
-        screen.print_at(str(section_index), col_index, start_row + 2)
-        screen.print_at(item, col_index, start_row + 3)
-        col_index += 3
-        section_index += 1
-
-    col_index = int(col_width_away_total * 3 / 2)
-    section_index = 1
-    screen.print_at('节次', col_index - 5, start_row + 2)
-    screen.print_at('比分', col_index - 5, start_row + 3)
-    for item in home:
-        screen.print_at(str(section_index), col_index, start_row + 2)
-        screen.print_at(item, col_index, start_row + 3)
-        col_index += 3
+    screen.print_at('节次', start_col_index - 5, start_row + 2)
+    screen.print_at('比分', start_col_index - 5, start_row + 3)
+    for item in score_in_sections:
+        screen.print_at(str(section_index), start_col_index, start_row + 2)
+        screen.print_at(item, start_col_index, start_row + 3)
+        start_col_index += 3
         section_index += 1
 
     return
@@ -297,10 +286,11 @@ def DrawOneGameDetailsFullMode(screen, game, details_table,
 
     DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
 
-    away_score_in_section = details_table['away_section_scores']
-    home_score_in_section = details_table['home_section_scores']
-    DrawScoreInSection(screen, away_score_in_section,
-                       home_score_in_section, col_width_away_total,
+    DrawScoreInSection(screen, details_table['away_section_scores'],
+                       int(col_width_away_total / 2),
+                       start_row)
+    DrawScoreInSection(screen, details_table['home_section_scores'],
+                       int(col_width_away_total * 3 / 2),
                        start_row)
     return
 
@@ -347,10 +337,11 @@ def DrawOneGameDetailsSimpleMode(screen, game, details_table,
         row_index = row_index + 1
 
     DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
-    away_score_in_section = details_table['away_section_scores']
-    home_score_in_section = details_table['home_section_scores']
-    DrawScoreInSection(screen, away_score_in_section,
-                       home_score_in_section, col_width_away_total,
+    DrawScoreInSection(screen, details_table['away_section_scores'],
+                       int(col_width_away_total / 2),
+                       start_row)
+    DrawScoreInSection(screen, details_table['home_section_scores'],
+                       int(col_width_away_total * 3 / 2),
                        start_row)
 
     return
