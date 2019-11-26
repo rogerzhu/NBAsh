@@ -346,7 +346,24 @@ def DrawOneGames(screen, game, row, col):
 
     team_vs_scores = '      {0}  vs  {1}'.format(
         game.teamA.score, game.teamB.score)
-    screen.print_at(team_vs_scores, col, row)
+    prefix_blank = '      '
+    str_versus = '  vs  '
+    screen.print_at(prefix_blank, col, row)
+
+    if int(game.teamA.score) > int(game.teamB.score):
+        screen.print_at(game.teamA.score, col + len(prefix_blank), row,
+                        colour=screen.COLOUR_GREEN)
+        col_len = len(prefix_blank) + len(game.teamA.score)
+        str_tmp = '{0}{1}'.format(str_versus, game.teamB.score)
+        screen.print_at(str_tmp, col + col_len, row)
+    elif int(game.teamA.score) < int(game.teamB.score):
+        str_tmp = '{0}{1}'.format(game.teamA.score,str_versus)
+        screen.print_at(str_tmp, col + len(prefix_blank), row)
+        col_len = len(prefix_blank) + len(str_tmp)
+        screen.print_at(game.teamB.score, col + col_len, row,
+                        colour=screen.COLOUR_GREEN)
+    else:
+        screen.print_at(team_vs_scores, col, row)
     row = row + 1
 
     team_vs_time = '   {0}'.format(game.time.strip())
