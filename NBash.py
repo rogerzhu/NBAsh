@@ -233,127 +233,104 @@ def DrawScoreInSection(screen, score_in_sections, start_col_index, start_row):
     return
 
 
-def DrawOneGameDetailsFullMode(screen, game, details_table,
-                               start_row, start_col=0):
-    row_index = start_row + 6
+def DrawOneGameDetailsCore(screen, table_items, width_list,
+                           col_width_total, row, col=0):
     col_width_away_total = 0
+    valid_list_width = [x for x in width_list if x != 0]
 
-    for item in details_table['away_player_details']:
+    for item in table_items:
         col_index = 0
+        valid_index = 0
         col_width_away_total = 0
         for row_item in item:
-            if col_index == 0:
-                screen.print_at(row_item, col_index * 18 + 1, row_index)
-                col_width_away_total += 18
-            elif col_index == 1:
+            if width_list[col_index] == 0:
                 pass
-            elif col_index > 2 and col_index < 6:
-                screen.print_at(row_item,
-                                18 + (col_index - 2) * 6 + 1,
-                                row_index)
-                col_width_away_total += 6
             else:
-                screen.print_at(row_item,
-                                18 + (col_index - 2) * 5 + 1,
-                                row_index)
-                col_width_away_total += 5
+                col_coord = valid_index * valid_list_width[valid_index] + 1
+                if valid_index > 0:
+                    col_coord = valid_list_width[0] + \
+                        (valid_index - 1) * valid_list_width[valid_index] + 1
+                if col_width_total != 0:
+                    col_coord += col_width_total
+
+                screen.print_at(row_item, col_coord, row)
+                col_width_away_total += valid_list_width[valid_index]
+
+                valid_index = valid_index + 1
             col_index = col_index + 1
-        row_index = row_index + 1
+        row = row + 1
 
     col_width_away_total += 1
-    row_index = start_row + 6
-    for item in details_table['home_player_details']:
-        col_index = 0
-        for row_item in item:
-            if col_index == 0:
-                screen.print_at(row_item,
-                                col_width_away_total + col_index * 18 + 1,
-                                row_index)
-            elif col_index == 1:
-                pass
-            elif col_index > 2 and col_index < 6:
-                screen.print_at(row_item,
-                                col_width_away_total + 18 +
-                                (col_index - 2) * 6 + 1,
-                                row_index)
-            else:
-                screen.print_at(row_item,
-                                col_width_away_total + 18 +
-                                (col_index - 2) * 5 + 1,
-                                row_index)
-            col_index = col_index + 1
-        row_index = row_index + 1
+    return col_width_away_total
 
-    DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
+
+def DrawOneGameDetailsFullMode(screen, game, details_table,
+                               start_row, start_col=0):
+    col_len = len(details_table['away_player_details'][0])
+    if col_len == 0:
+        return
+    col_width_list = [18, 0, 5]
+    for i in range(len(col_width_list), col_len):
+        col_width_list.append(5)
+
+    col_width_away_total = DrawOneGameDetailsCore(
+                        screen, details_table['away_player_details'],
+                        col_width_list, 0, start_row, start_col)
+
+    DrawOneGameDetailsCore(
+        screen, details_table['home_player_details'],
+        col_width_list, col_width_away_total,
+        start_row, start_col)
+
+    DrawScoresInDetailsPage(screen, game, col_width_away_total, 0)
 
     DrawScoreInSection(screen, details_table['away_section_scores'],
                        int(col_width_away_total / 2),
-                       start_row)
+                       0)
     DrawScoreInSection(screen, details_table['home_section_scores'],
                        int(col_width_away_total * 3 / 2),
-                       start_row)
+                       0)
     return
 
 
 def DrawOneGameDetailsSimpleMode(screen, game, details_table,
                                  start_row, start_col=0):
-    row_index = start_row + 6
-    col_width_away_total = 0
+    col_len = len(details_table['away_player_details'][0])
+    if col_len == 0:
+        return
+    col_width_list = [18, 0, 0, 0, 0, 0, 0, 0]
+    for i in range(len(col_width_list), col_len):
+        col_width_list.append(5)
 
-    for item in details_table['away_player_details']:
-        col_index = 0
-        col_width_away_total = 0
-        for row_item in item:
-            if col_index == 0:
-                screen.print_at(row_item, col_index * 18 + 1, row_index)
-                col_width_away_total += 18
-            elif col_index > 0 and col_index < 8:
-                pass
-            else:
-                screen.print_at(
-                    row_item, 18 + (col_index - 8) * 5 + 1, row_index)
-                col_width_away_total += 5
-            col_index = col_index + 1
-        row_index = row_index + 1
+    col_width_away_total = DrawOneGameDetailsCore(
+                        screen, details_table['away_player_details'],
+                        col_width_list, 0, start_row, start_col)
 
-    col_width_away_total += 1
-    row_index = start_row + 6
-    for item in details_table['home_player_details']:
-        col_index = 0
-        for row_item in item:
-            if col_index == 0:
-                screen.print_at(
-                    row_item,
-                    col_width_away_total + col_index * 18 + 1,
-                    row_index)
-            elif col_index > 0 and col_index < 8:
-                pass
-            else:
-                screen.print_at(
-                    row_item,
-                    col_width_away_total + 18 + (col_index - 8) * 5 + 1,
-                    row_index)
-            col_index = col_index + 1
-        row_index = row_index + 1
+    DrawOneGameDetailsCore(
+        screen, details_table['home_player_details'],
+        col_width_list, col_width_away_total,
+        start_row, start_col)
 
-    DrawScoresInDetailsPage(screen, game, col_width_away_total, start_row)
+    DrawScoresInDetailsPage(screen, game, col_width_away_total, 0)
     DrawScoreInSection(screen, details_table['away_section_scores'],
                        int(col_width_away_total / 2),
-                       start_row)
+                       0)
     DrawScoreInSection(screen, details_table['home_section_scores'],
                        int(col_width_away_total * 3 / 2),
-                       start_row)
+                       0)
 
     return
 
 
 def DrawOneGameDetails(screen, game, details_table, start_row, start_col=0):
+    row_index = start_row + 6
+    col_index = start_col
     if screen.width > 190:
         DrawOneGameDetailsFullMode(
-            screen, game, details_table, start_row, start_col)
+            screen, game, details_table, row_index, col_index)
     else:
         DrawOneGameDetailsSimpleMode(
-            screen, game, details_table, start_row, start_col)
+            screen, game, details_table, row_index, col_index)
 
     screen.refresh()
     return
