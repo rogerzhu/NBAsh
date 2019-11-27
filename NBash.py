@@ -144,8 +144,11 @@ def GetDetailTable(content_table):
 
     for item in content_table.find_all('tr')[1:-2]:
         one_row = []
-        for td_item in item.find_all('td'):
-            one_row.append(td_item.get_text().strip())
+        for index, td_item in enumerate(item.find_all('td')):
+            td_text = td_item.get_text().strip()
+            if index == 0 and len(td_text) > 10:
+                td_text = td_text[td_text.find('-') + 1:]
+            one_row.append(td_text)
         table_details.append(one_row)
 
     return table_details
@@ -357,7 +360,7 @@ def DrawOneGames(screen, game, row, col):
         str_tmp = '{0}{1}'.format(str_versus, game.teamB.score)
         screen.print_at(str_tmp, col + col_len, row)
     elif int(game.teamA.score) < int(game.teamB.score):
-        str_tmp = '{0}{1}'.format(game.teamA.score,str_versus)
+        str_tmp = '{0}{1}'.format(game.teamA.score, str_versus)
         screen.print_at(str_tmp, col + len(prefix_blank), row)
         col_len = len(prefix_blank) + len(str_tmp)
         screen.print_at(game.teamB.score, col + col_len, row,
