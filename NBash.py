@@ -92,7 +92,7 @@ def GetTextOfItem(item, default_value=''):
 
 
 def CheckAllGamesOver(all_game_lists):
-    keywords = '结束'
+    keywords = '已结束'
     if all(keywords in item.time for item in all_game_lists):
         return True
     else:
@@ -391,13 +391,14 @@ def GoLive(screen):
     choice = ''
 
     while True:
-        ClearScreen(screen)
         if not all_games_finished:
             all_game_lists = GetAllGamesList()
         games = GetAllGames(all_game_lists, all_games_finished)
         all_games_finished = CheckAllGamesOver(games)
 
         if not is_detail:
+            if not all_games_finished:
+                ClearScreen(screen)
             one_game_finished = False
             row_number = int(num_of_games / 3) + 1
             if num_of_games % 3 == 0:
@@ -435,11 +436,12 @@ def GoLive(screen):
                 time.sleep(1)
         else:
             if not one_game_finished:
+                ClearScreen(screen)
                 one_game_details_table = GetOneGameDetails(
                     all_game_lists, choice.upper())
 
             if len(one_game_details_table) != 0:
-                if '结束' in games[ord(choice) - ord('a')].time:
+                if '已结束' in games[ord(choice) - ord('a')].time:
                     one_game_finished = True
                 DrawOneGameDetails(
                     screen, games[ord(choice) - ord('a')],
@@ -451,6 +453,7 @@ def GoLive(screen):
             if ev in (ord('Q'), ord('q')):
                 is_detail = False
                 choice = ''
+                ClearScreen(screen)
 
             screen.print_at('按q返回上层界面: ', 0, screen.height - 1)
             screen.refresh()
