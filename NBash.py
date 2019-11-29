@@ -9,7 +9,7 @@ import os
 from asciimatics.screen import Screen
 import fake_useragent
 
-base_url = 'https://nba.hupu.com/games'
+base_url = 'https://nba.hupu.com/games/2019-11-28'
 line_height = 5
 
 
@@ -267,15 +267,8 @@ def DrawOneGameDetailsCore(screen, table_items, width_list,
     return col_width_away_total
 
 
-def DrawOneGameDetailsFullMode(screen, game, details_table,
-                               start_row, start_col=0):
-    col_len = len(details_table['away_player_details'][0])
-    if col_len == 0:
-        return
-    col_width_list = [18, 0, 5]
-    for i in range(len(col_width_list), col_len):
-        col_width_list.append(5)
-
+def DrawScoreDetailsWholePageCore(screen, game, details_table, col_width_list,
+                                  start_row, start_col=0):
     col_width_away_total = DrawOneGameDetailsCore(
                         screen, details_table['away_player_details'],
                         col_width_list, 0, start_row, start_col)
@@ -296,6 +289,20 @@ def DrawOneGameDetailsFullMode(screen, game, details_table,
     return
 
 
+def DrawOneGameDetailsFullMode(screen, game, details_table,
+                               start_row, start_col=0):
+    col_len = len(details_table['away_player_details'][0])
+    if col_len == 0:
+        return
+    col_width_list = [18, 0, 5]
+    for i in range(len(col_width_list), col_len):
+        col_width_list.append(5)
+
+    DrawScoreDetailsWholePageCore(screen, game, details_table,
+                                  col_width_list, start_row, start_col)
+    return
+
+
 def DrawOneGameDetailsSimpleMode(screen, game, details_table,
                                  start_row, start_col=0):
     col_len = len(details_table['away_player_details'][0])
@@ -305,22 +312,8 @@ def DrawOneGameDetailsSimpleMode(screen, game, details_table,
     for i in range(len(col_width_list), col_len):
         col_width_list.append(5)
 
-    col_width_away_total = DrawOneGameDetailsCore(
-                        screen, details_table['away_player_details'],
-                        col_width_list, 0, start_row, start_col)
-
-    DrawOneGameDetailsCore(
-        screen, details_table['home_player_details'],
-        col_width_list, col_width_away_total,
-        start_row, start_col)
-
-    DrawScoresInDetailsPage(screen, game, col_width_away_total, 0)
-    DrawScoreInSection(screen, details_table['away_section_scores'],
-                       int(col_width_away_total / 2),
-                       0)
-    DrawScoreInSection(screen, details_table['home_section_scores'],
-                       int(col_width_away_total * 3 / 2),
-                       0)
+    DrawScoreDetailsWholePageCore(screen, game, details_table,
+                                  col_width_list, start_row, start_col)
 
     return
 
