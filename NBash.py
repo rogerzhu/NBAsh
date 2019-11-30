@@ -9,7 +9,7 @@ import os
 from asciimatics.screen import Screen
 import fake_useragent
 
-base_url = 'https://nba.hupu.com/games/2019-11-28'
+base_url = 'https://nba.hupu.com/games'
 line_height = 5
 
 
