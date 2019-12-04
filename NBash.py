@@ -162,8 +162,9 @@ def GetScoreInSection(live_content):
     score_in_section_home_table = GetOneElementByClass(
         score_in_section_table, 'tr', 'home_score')
 
-    away_score_list = ['0', '0', '0', '0']
-    home_score_list = ['0', '0', '0', '0']
+    section_counts = len(score_in_section_away_table.find_all('td')[1:-1])
+    away_score_list = ['0' for n in range(section_counts)]
+    home_score_list = ['0' for n in range(section_counts)]
     away_index = 0
     home_index = 0
     for item in score_in_section_away_table.find_all('td')[1:-1]:
