@@ -70,13 +70,13 @@ class AllGameView(Effect):
 
     def _update(self, frame_no):
         if (frame_no - 1) % 60 == 0:
-            if self._all_games_finished is False:
-                self._ClearScreen()
-                all_game_lists = self._GetAllGamesList()
-                self._games = self._GetAllGames(all_game_lists)
-                self._all_games_finished = self._CheckAllGamesOver(all_game_lists)
-            else:
-                self._screen.print_at('123',0,0)
+           #if self._all_games_finished is False:
+            self._ClearScreen()
+            all_game_lists = self._GetAllGamesList()
+            self._games = self._GetAllGames(all_game_lists)
+            self._all_games_finished = self._CheckAllGamesOver(all_game_lists)
+            #else:
+            #    self._screen.print_at('123',0,0)
             self._GoLive(int(frame_no / 60) + 1)
         return
 
