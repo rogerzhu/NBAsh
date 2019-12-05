@@ -66,17 +66,18 @@ class AllGameView(Effect):
 
     def reset(self):
         self._ClearScreen()
+        self._all_games_finished = False
         return
 
     def _update(self, frame_no):
         if (frame_no - 1) % 60 == 0:
-           #if self._all_games_finished is False:
-            self._ClearScreen()
-            all_game_lists = self._GetAllGamesList()
-            self._games = self._GetAllGames(all_game_lists)
-            self._all_games_finished = self._CheckAllGamesOver(all_game_lists)
-            #else:
-            #    self._screen.print_at('123',0,0)
+            if self._all_games_finished is False:
+                self._ClearScreen()
+                all_game_lists = self._GetAllGamesList()
+                self._games = self._GetAllGames(all_game_lists)
+                self._all_games_finished = self._CheckAllGamesOver()
+            else:
+                pass
             self._GoLive(int(frame_no / 60) + 1)
         return
 
@@ -102,9 +103,10 @@ class AllGameView(Effect):
             if col == 0:
                 row = row + 1
 
-        progress = '*' * progress_count
-        progress_count = (progress_count + 1) % 10
-        self._screen.print_at(progress, 0, (row + 1) * line_height + 5)
+        if progress_count % 2 == 0:
+            self._screen.print_at('*********', 0, (row + 1) * line_height + 5)
+        else:
+            self._screen.print_at('         ', 0, (row + 1) * line_height + 5)
         self._screen.print_at(
             instructions + str(choice), 0, (row + 1) * line_height + 3)
 
@@ -165,9 +167,9 @@ class AllGameView(Effect):
             index = chr(ord(index) + 1)
         return games_list
 
-    def _CheckAllGamesOver(self, all_game_lists):
+    def _CheckAllGamesOver(self):
         keywords = '已结束'
-
+        all_game_lists = self._games
         if all(keywords in item.time
                for item in all_game_lists if item.time is not None):
             return True
@@ -217,6 +219,7 @@ class GameDetailsView(Effect):
         self._one_game_finished = False
 
     def reset(self):
+        self._one_game_finished = False
         pass
 
     def _update(self, frame_no):
@@ -234,7 +237,6 @@ class GameDetailsView(Effect):
                         one_game_details_table, 0)
                 else:
                     self._screen.print_at('比赛未开始', 0, 0)
-
 
     @property
     def stop_frame(self):
