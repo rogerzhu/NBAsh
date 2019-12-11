@@ -4,53 +4,29 @@ from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError
 from asciimatics.event import KeyboardEvent
 import sys
-from Team import Team
-from Game import Game
+from models.Team import Team
+from models.Game import Game
 # from Player import Player
 import requests
 from bs4 import BeautifulSoup
-from bs4 import element
-import os
-import fake_useragent
-
+from utilities.helpers import get_header, GetElementsByClass, ClearScreen
+from utilities.helpers import GetOneElementByClass, GetTextOfItem
 
 base_url = 'https://nba.hupu.com/games'
 line_height = 5
 choice = ''
-
-
-# helper functions
-def get_header():
-    location = os.getcwd() + '/agent.json'
-    ua = fake_useragent.UserAgent(path=location)
-    return ua.random
-
-
-def GetElementsByClass(item, tag, class_name):
-    if item.find_all(tag, {'class': class_name}) is not None:
-        return item.find_all(tag, {'class': class_name})
-
-
-def GetOneElementByClass(item, tag, class_name, default_value=''):
-    if item.find(tag, {'class': class_name}) is not None:
-        return item.find(tag,  {'class': class_name})
-    else:
-        return default_value
-
-
-def GetTextOfItem(item, default_value=''):
-    if item is not None and isinstance(item, element.Tag):
-        return item.get_text()
-    else:
-        return default_value
+all_game_lists = None
+games = None
 
 
 class AllGameView(Effect):
     def __init__(self, screen, **kwargs):
         super(AllGameView, self).__init__(screen, **kwargs)
+        global all_game_lists
+        global games
         all_game_lists = self._GetAllGamesList()
-        self._games = self._GetAllGames(all_game_lists)
-        self._num_of_games = len(self._games)
+        games = self._GetAllGames(all_game_lists)
+        self._num_of_games = len(games)
         self._all_games_finished = False
 
     def process_event(self, event):
@@ -65,16 +41,17 @@ class AllGameView(Effect):
             return event
 
     def reset(self):
-        self._ClearScreen()
+        ClearScreen(self._screen)
         self._all_games_finished = False
         return
 
     def _update(self, frame_no):
+        global games
         if (frame_no - 1) % 60 == 0:
             if self._all_games_finished is False:
-                self._ClearScreen()
+                ClearScreen(self._screen)
                 all_game_lists = self._GetAllGamesList()
-                self._games = self._GetAllGames(all_game_lists)
+                games = self._GetAllGames(all_game_lists)
                 self._all_games_finished = self._CheckAllGamesOver()
             else:
                 pass
@@ -97,7 +74,7 @@ class AllGameView(Effect):
         row = 0
         col = 0
 
-        for game in self._games:
+        for game in games:
             self._DrawOneGame(game, row * line_height + 1, col * 25 + 1)
             col = (col + 1) % 3
             if col == 0:
@@ -123,11 +100,6 @@ class AllGameView(Effect):
             self._screen.draw(i * line_width, line_height * row + 1, char='|')
 
         return
-
-    def _ClearScreen(self):
-        for i in range(0, self._screen.height + 1):
-            self._screen.move(0, i)
-            self._screen.draw(self._screen.width, i, char=' ')
 
     def _GetAllGamesList(self):
         headers = {"User-Agent": get_header()}
@@ -169,7 +141,7 @@ class AllGameView(Effect):
 
     def _CheckAllGamesOver(self):
         keywords = '已结束'
-        all_game_lists = self._games
+        all_game_lists = games
         if all(keywords in item.time
                for item in all_game_lists if item.time is not None):
             return True
@@ -224,10 +196,11 @@ class GameDetailsView(Effect):
 
     def _update(self, frame_no):
         global choice
+        global games
         if (frame_no - 1) % 60 == 0:
             if self._one_game_finished is False:
-                self._ClearScreen()
-                one_game_details_table, games =\
+                ClearScreen(self._screen)
+                one_game_details_table =\
                     self._GetOneGameDetails(choice.upper())
                 if len(one_game_details_table) != 0:
                     if '结束' in games[ord(choice.upper()) - ord('A')].time:
@@ -242,18 +215,8 @@ class GameDetailsView(Effect):
     def stop_frame(self):
         pass
 
-    def _GetAllGamesList(self):
-        headers = {"User-Agent": get_header()}
-        base_r = requests.get(url=base_url, headers=headers)
-        base_content = BeautifulSoup(base_r.content, features='html.parser')
-
-        all_game_lists = base_content.find_all('div', {'class': 'list_box'})
-
-        return all_game_lists
-
     def _GetOneGameDetails(self, str_index):
-        all_game_lists = self._GetAllGamesList()
-        games = self._GetAllGames(all_game_lists)
+        global all_game_lists
         table_details = {}
         index = ord(str_index) - ord('A')
         score_live = GetOneElementByClass(all_game_lists[index], 'a', 'd')
@@ -271,7 +234,7 @@ class GameDetailsView(Effect):
 
         if score_live_content_core_table_away is None or \
            score_live_content_core_table_home is None:
-            return table_details, games
+            return table_details
 
         table_details_away = self._GetDetailTable(
             score_live_content_core_table_away)
@@ -286,7 +249,7 @@ class GameDetailsView(Effect):
         table_details['away_section_scores'] = score_in_section_away
         table_details['home_section_scores'] = score_in_section_home
 
-        return table_details, games
+        return table_details
 
     def _GetScoreInSection(self, live_content):
         score_in_section_table = GetOneElementByClass(
@@ -463,40 +426,6 @@ class GameDetailsView(Effect):
                 game, details_table, row_index, col_index)
 
         return
-
-    def _ClearScreen(self):
-        for i in range(0, self._screen.height + 1):
-            self._screen.move(0, i)
-            self._screen.draw(self._screen.width, i, char=' ')
-
-    def _GetAllGames(self, all_game_lists):
-        index = 'A'
-        games_list = []
-        for item in all_game_lists:
-            team_vs = GetOneElementByClass(item, 'div', 'team_vs')
-            team_details_div = GetElementsByClass(team_vs, 'div', 'txt')
-
-            team_score_a = GetOneElementByClass(
-                team_details_div[0], 'span', 'num')
-            team_score_b = GetOneElementByClass(
-                team_details_div[1], 'span', 'num')
-
-            team_score_a = GetTextOfItem(team_score_a, '0')
-            team_score_b = GetTextOfItem(team_score_b, '0')
-
-            team_name_a = GetTextOfItem(team_details_div[0].find('a'))
-            team_name_b = GetTextOfItem(team_details_div[1].find('a'))
-
-            team_a = Team(name=team_name_a, score=team_score_a)
-            team_b = Team(name=team_name_b, score=team_score_b)
-
-            team_vs_time = GetOneElementByClass(team_vs, 'span', 'b')
-            team_vs_time = GetTextOfItem(team_vs_time, '      未开始')
-
-            games_list.append(Game(index, team_a, team_b, team_vs_time))
-
-            index = chr(ord(index) + 1)
-        return games_list
 
 
 def demo(screen):
