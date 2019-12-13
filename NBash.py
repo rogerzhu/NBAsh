@@ -191,6 +191,7 @@ class GameDetailsView(Effect):
         self._one_game_finished = False
 
     def reset(self):
+        ClearScreen(self._screen)
         self._one_game_finished = False
         pass
 
@@ -244,12 +245,43 @@ class GameDetailsView(Effect):
         score_in_section_away, score_in_section_home = self._GetScoreInSection(
             score_live_content)
 
+        time = ''
+        time_div = GetOneElementByClass(
+            score_live_content, 'div', 'team_num')
+        if time_div is not None:
+            time = time_div.get_text().strip()
+
+        teamA_name, teamB_name, teamA_score, teamB_score\
+            = self._GetTeamNamesAndScores(score_live_content)
+
         table_details['away_player_details'] = table_details_away
         table_details['home_player_details'] = table_details_home
         table_details['away_section_scores'] = score_in_section_away
         table_details['home_section_scores'] = score_in_section_home
+        table_details['time'] = time
+        table_details['teamA_name'] = teamA_name
+        table_details['teamB_name'] = teamB_name
+        table_details['teamA_score'] = teamA_score
+        table_details['teamB_score'] = teamB_score
 
         return table_details
+
+    def _GetTeamNamesAndScores(self, live_content):
+        teamA_div = GetOneElementByClass(
+            live_content, 'div', 'team_a')
+        teamA_msg_div = GetOneElementByClass(
+            teamA_div, 'div', 'message')
+        teamA_name = teamA_msg_div.p.get_text().strip()
+        teamA_score = teamA_msg_div.h2.get_text().strip()
+
+        teamB_div = GetOneElementByClass(
+            live_content, 'div', 'team_b')
+        teamB_msg_div = GetOneElementByClass(
+            teamB_div, 'div', 'message')
+        teamB_name = teamB_msg_div.p.get_text().strip()
+        teamB_score = teamB_msg_div.h2.get_text().strip()
+
+        return teamA_name, teamB_name, teamA_score, teamB_score
 
     def _GetScoreInSection(self, live_content):
         score_in_section_table = GetOneElementByClass(
@@ -301,20 +333,18 @@ class GameDetailsView(Effect):
 
         return table_details
 
-    def _DrawScoresInDetailsPage(self, game,
+    def _DrawScoresInDetailsPage(self, time, nameA, nameB, scoreA, scoreB,
                                  col_width_away_total, start_row):
-        game_info_a = '{0}:{1}'.format(
-            game.teamA.name, game.teamA.score)
+        game_info_a = '{0}:{1}'.format(nameA, scoreA)
         self._screen.print_at(
             game_info_a, int(col_width_away_total / 2), start_row)
 
-        game_info_b = '{0}:{1}'.format(
-            game.teamB.name, game.teamB.score)
+        game_info_b = '{0}:{1}'.format(nameB, scoreB)
         self._screen.print_at(
             game_info_b, int(col_width_away_total * 3 / 2), start_row)
 
         self._screen.print_at(
-            game.time.strip(), col_width_away_total, start_row)
+            time, col_width_away_total, start_row)
 
         return
 
@@ -381,7 +411,12 @@ class GameDetailsView(Effect):
             col_width_list, col_width_away_total,
             start_row, start_col)
 
-        self._DrawScoresInDetailsPage(game, col_width_away_total, 0)
+        self._DrawScoresInDetailsPage(details_table['time'],
+                                      details_table['teamA_name'],
+                                      details_table['teamB_name'],
+                                      details_table['teamA_score'],
+                                      details_table['teamB_score'],
+                                      col_width_away_total, 0)
 
         self._DrawScoreInSection(details_table['away_section_scores'],
                                  int(col_width_away_total / 2), 0)
@@ -407,7 +442,12 @@ class GameDetailsView(Effect):
             col_width_list, col_width_away_total,
             start_row, start_col)
 
-        self._DrawScoresInDetailsPage(game, col_width_away_total, 0)
+        self._DrawScoresInDetailsPage(details_table['time'],
+                                      details_table['teamA_name'],
+                                      details_table['teamB_name'],
+                                      details_table['teamA_score'],
+                                      details_table['teamB_score'],
+                                      col_width_away_total, 0)
         self._DrawScoreInSection(details_table['away_section_scores'],
                                  int(col_width_away_total / 2), 0)
         self._DrawScoreInSection(details_table['home_section_scores'],
