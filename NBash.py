@@ -247,8 +247,8 @@ class GameDetailsView(Effect):
 
         time = ''
         time_div = GetOneElementByClass(
-            score_live_content, 'div', 'team_num')
-        if time_div is not None:
+            score_live_content, 'div', 'team_num', '已结束')
+        if time_div is not '已结束':
             time = time_div.get_text().strip()
 
         teamA_name, teamB_name, teamA_score, teamB_score\
